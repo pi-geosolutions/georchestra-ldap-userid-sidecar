@@ -2,6 +2,7 @@ SHELL := /bin/bash
 IMAGE=pigeosolutions/georchestra-ldap-userid-job
 REV=`git rev-parse --short HEAD`
 DATE=`date +%Y%m%d-%H%M`
+#DATE=`date +%Y%m%d`
 
 all: pull-deps docker-build docker-push
 

@@ -1,20 +1,20 @@
 # encoding: utf-8
 
-from datetime import datetime
 import ldap3
 import logging
 import sys
 from os import environ
-from pprint import pprint
+# from pprint import pprint
 
-import prometheus_client as prom
 from prometheus_client import CollectorRegistry, Histogram, Counter, Gauge, push_to_gateway
-from get_docker_secret import get_docker_secret
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.DEBUG)
+from fileenv import fileenv
+
+loglevel = environ.get('LOG_LEVEL', logging.DEBUG)
+log = logging.getLogger()
+log.setLevel(loglevel)
 handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(logging.DEBUG)
+handler.setLevel(loglevel)
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 log.addHandler(handler)
@@ -25,8 +25,7 @@ baseDN=environ.get('BASE_DN','dc=georchestra,dc=org')
 search_base = 'ou=users,{}'.format(baseDN)
 # the geOrchestra role used to identify the users that should have an employeeNumber (used to connect to SSH)
 match_role=environ.get('MATCH_ROLE', 'SSH_USER')
-ldapadmin_passwd = get_docker_secret('ldapadmin_passwd', default='ldapadmin_pwd')
-
+ldapadmin_passwd = fileenv('LDAPADMIN_PASSWORD', fallback='ldapadmin_pwd')
 
 prom_pushgateway_uri = environ.get('PROM_PUSHGATEWAY_URI') # if not defined, it won't send metrics
 # prom_pushgateway_uri = environ.get('PROM_PUSHGATEWAY_URI', 'localhost:9091')
@@ -37,6 +36,7 @@ prom_nextEN = Gauge('next_employeeNumber', 'Next available value for employeeNum
 prom_addedEN = Counter('configured_employeeNumber_total', 'Number of users that have had the employeeNumber LDAP attribute configured', registry=registry)
 prom_last_run = Gauge('job_last_success_unixtime', 'Last time the job was run', registry=registry)
 prom_process_duration_seconds = Histogram('process_duration_seconds', 'Duration in seconds of the job process', registry=registry)
+
 
 def get_next_employee_number(ldapconnection: ldap3.Connection):
     """
