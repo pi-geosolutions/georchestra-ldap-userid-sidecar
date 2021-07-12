@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+from datetime import datetime
 import ldap3
 import logging
 import sys
@@ -11,12 +12,10 @@ from prometheus_client import CollectorRegistry, Histogram, Counter, Gauge, push
 from fileenv import fileenv
 
 loglevel = environ.get('LOG_LEVEL', logging.DEBUG)
-log = logging.getLogger()
+log = logging.getLogger(__name__)
 log.setLevel(loglevel)
 handler = logging.StreamHandler(sys.stdout)
-handler.setLevel(loglevel)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-handler.setFormatter(formatter)
+handler.setFormatter(logging.Formatter(fmt='[%(asctime)s: %(levelname)s] %(message)s'))
 log.addHandler(handler)
 
 # Load some config from ENV vars
@@ -100,6 +99,8 @@ def main():
             prom_addedEN.inc(next_nextEN-nextEN)
             prom_last_run.set_to_current_time()
             push_to_gateway(prom_pushgateway_uri, job='ldap-userid-sidecar', registry=registry)
+
+        log.info("employeeNumbers up-to-date")
 
 if __name__ == '__main__':
     main()
