@@ -5,6 +5,7 @@ import ldap3
 import logging
 import sys
 from os import environ
+from urllib.error import URLError
 # from pprint import pprint
 
 from prometheus_client import CollectorRegistry, Histogram, Counter, Gauge, push_to_gateway
@@ -95,13 +96,15 @@ def main():
 
         # Send metrics to prometheus pushgateway
         if prom_pushgateway_uri:
-            prom_nextEN.set(next_nextEN)
-            prom_addedEN.inc(next_nextEN-nextEN)
-            prom_last_run.set_to_current_time()
-            push_to_gateway(prom_pushgateway_uri, job='ldap-userid-sidecar', registry=registry)
+            try:
+                prom_nextEN.set(next_nextEN)
+                prom_addedEN.inc(next_nextEN-nextEN)
+                prom_last_run.set_to_current_time()
+                push_to_gateway(prom_pushgateway_uri, job='ldap-userid-sidecar', registry=registry)
+            except URLError:
+                log.error("Unable to reach prometheus pushgateway {}".format(prom_pushgateway_uri))
 
         log.info("employeeNumbers up-to-date")
 
 if __name__ == '__main__':
     main()
-
