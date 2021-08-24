@@ -5,7 +5,7 @@ import ldap3
 import logging
 import sys
 from os import environ
-from urllib.error import URLError
+# from urllib.error import URLError
 # from pprint import pprint
 
 from prometheus_client import CollectorRegistry, Histogram, Counter, Gauge, push_to_gateway
@@ -71,8 +71,9 @@ def set_employee_number(ldapconnection: ldap3.Connection, nextEN: int):
     ldapconnection.search(search_base, search_filter, attributes=attrs)
     # pprint(ldapconnection.entries)
     for entry in ldapconnection.entries:
-        log.debug("Adding employeeNumber {} to user {}".format(nextEN, entry.cn))
-        ldapconnection.modify('uid={},{}'.format(entry.cn, search_base),
+        log.debug("Adding employeeNumber {} to user {}".format(nextEN, entry.entry_dn))
+
+        ldapconnection.modify('{}'.format(entry.entry_dn),
              {'employeeNumber': [(ldap3.MODIFY_REPLACE, ['{}'.format(nextEN)])]})
         nextEN+=1
         log.debug(ldapconnection.result)
@@ -101,7 +102,7 @@ def main():
                 prom_addedEN.inc(next_nextEN-nextEN)
                 prom_last_run.set_to_current_time()
                 push_to_gateway(prom_pushgateway_uri, job='ldap-userid-sidecar', registry=registry)
-            except URLError:
+            except Exception:
                 log.error("Unable to reach prometheus pushgateway {}".format(prom_pushgateway_uri))
 
         log.info("employeeNumbers up-to-date")
