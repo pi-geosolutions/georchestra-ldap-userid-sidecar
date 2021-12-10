@@ -32,8 +32,8 @@ prom_pushgateway_uri = environ.get('PROM_PUSHGATEWAY_URI') # if not defined, it 
 
 # Prometheus metrics
 registry = CollectorRegistry()
-prom_nextEN = Gauge('next_employeeNumber', 'Next available value for employeeNumber LDAP attribute', registry=registry)
-prom_addedEN = Counter('configured_employeeNumber_total', 'Number of users that have had the employeeNumber LDAP attribute configured', registry=registry)
+prom_nextEN = Gauge('ldap_userid_sidecar_next_employeeNumber', 'Next available value for employeeNumber LDAP attribute', registry=registry)
+prom_addedEN = Counter('ldap_userid_sidecar_configured_employeeNumber_total', 'Number of users that have had the employeeNumber LDAP attribute configured', registry=registry)
 prom_last_run = Gauge('job_last_success_unixtime', 'Last time the job was run', registry=registry)
 prom_process_duration_seconds = Histogram('process_duration_seconds', 'Duration in seconds of the job process', registry=registry)
 
